@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STARK INDUSTRIES — Mark LXXXV (85) Nano-Zırh Vitrini</title>
+
+  <!-- Fontlar -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Erken Tema & Dil Yükleyici (Splash ekranının ve sayfanın saate & konuma göre doğru açılmasını sağlar) -->
+  <script>
+    (function () {
+      try {
+        // Saate göre açık / kapalı tema tespiti (07:00 - 19:00: Crimson-Gold Açık Tema, diğer saatler: Cyan Koyu/Gece Tema)
+        var hour = new Date().getHours();
+        var isDayTime = (hour >= 7 && hour < 19);
+        var autoTheme = isDayTime ? 'crimson-gold' : 'default';
+        var isThemeManual = localStorage.getItem('stark_theme_manual') === 'true';
+        var theme = isThemeManual ? (localStorage.getItem('stark_theme') || autoTheme) : autoTheme;
+
+        if (theme === 'crimson-gold') {
+          document.documentElement.setAttribute('data-theme', 'crimson-gold');
+          var fav = document.querySelector('link[rel="icon"]');
+          if (fav) {
+            fav.href = 'data:image/svg+xml,' + encodeURIComponent(
+              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' +
+              '<circle cx="16" cy="16" r="14" fill="#66000c" stroke="#ffd700" stroke-width="2"/>' +
+              '<circle cx="16" cy="16" r="9.5" fill="none" stroke="#ffd700" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.85"/>' +
+              '<polygon points="16,8.5 21.8,18.5 10.2,18.5" fill="none" stroke="#ffffff" stroke-width="1.4"/>' +
+              '<circle cx="16" cy="16" r="2.8" fill="#ffd700"/>' +
+              '</svg>'
+            );
+          }
+        }
+
+        // Dil erken yükleme (Manuel seçim yoksa saat dilimi/tarayıcı diliyle başlatılır, IP tespiti app.js ile doğrulanır)
+        var isLangManual = localStorage.getItem('stark_lang_manual') === 'true';
+        var lang = 'en';
+        if (isLangManual) {
+          lang = localStorage.getItem('stark_lang') || 'tr';
+        } else {
+          var tz = (Intl && Intl.DateTimeFormat) ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+          var browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+          var isTR = (tz && (tz.indexOf('Istanbul') !== -1 || tz.indexOf('Turkey') !== -1)) || browserLang.indexOf('tr') === 0;
+          lang = isTR ? 'tr' : 'en';
+        }
+        document.documentElement.setAttribute('lang', lang);
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Three.js ve GLTFLoader (Yerel ve Güvenilir) -->
+  <script src="js/three.min.js"></script>
+  <script src="js/GLTFLoader.js"></script>
+</head>
+
+<body class="suit-classic">
+
+  <!-- Plazma Bıçak İzi ve Model Kıvılcım Katmanı (Fruit Ninja & Repulsor Sparks) -->
+  <canvas id="plasmaTrailCanvas" class="plasma-trail-canvas"></canvas>
+
+  <!-- Özel HUD Hedefleme İmleci -->
+  <div class="cursor-reticle" id="cursorReticle">
+    <div class="reticle-dot"></div>
+    <div class="reticle-circle"></div>
+    <div class="reticle-coords" id="reticleCoords">X: 00 // Y: 00</div>
+  </div>
+
+  <!-- Yükleme Ekranı (Splash / Preloader) -->
+  <div class="stark-preloader" id="preloader">
+    <div class="preloader-hud-corner tl"></div>
+    <div class="preloader-hud-corner tr"></div>
+    <div class="preloader-hud-corner bl"></div>
+    <div class="preloader-hud-corner br"></div>
+
+    <div class="preloader-content">
+      <div class="preloader-badge" data-i18n="preloader.badge">STARK INDUSTRIES // MARK LXXXV PROTOKOLÜ</div>
+
+      <div class="arc-loader-ring">
+        <div class="arc-core-pulse"></div>
+      </div>
+
+      <div class="preloader-title" data-i18n="preloader.title">JARVIS SİSTEM BAŞLATILIYOR</div>
+      <div class="preloader-status" id="loadStatus">3D NANO-ZIRH MODELİ YÜKLENİYOR: %0</div>
+
+      <div class="preloader-bar">
+        <div class="preloader-fill" id="loadProgress"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Üst HUD Menü / Navbar -->
+  <header class="stark-navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#hero" class="brand-stark">
+        <span class="stark-arc-icon" aria-hidden="true">
+          <svg class="stark-arc-svg" viewBox="0 0 28 28" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="14" cy="14" r="12" class="arc-svg-outer" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="14" cy="14" r="8.8" class="arc-svg-coils" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2"/>
+            <polygon points="14,6.8 20.2,17.6 7.8,17.6" class="arc-svg-tri" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <circle cx="14" cy="14" r="2.8" class="arc-svg-core" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="stark-title">STARK <span>INDUSTRIES</span></span>
+        <span class="stark-badge">MARK 85</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#hero" data-i18n="nav.armor">Zırh</a>
+        <a href="#helmet" data-i18n="nav.helmet">Kask & HUD</a>
+        <a href="#reactor" data-i18n="nav.reactor">Ark Reaktörü</a>
+        <a href="#reactor-dive" class="nav-link-dive" data-i18n="nav.dive">Çekirdek İçi</a>
+        <a href="#repulsor" data-i18n="nav.repulsor">İticiler</a>
+        <a href="#specs" data-i18n="nav.telemetry">Telemetri</a>
+      </nav>
+
+      <div class="nav-actions">
+        <!-- Kompakt HUD Dil Seçici (TR / EN) -->
+        <button type="button" class="hud-lang-toggle" id="langToggleBtn" aria-label="Dili Değiştir / Switch Language" title="Dil / Language: TR / EN">
+          <span class="lang-opt active" data-lang="tr">TR</span>
+          <span class="lang-sep">/</span>
+          <span class="lang-opt" data-lang="en">EN</span>
+        </button>
+
+        <!-- Kompakt Animasyonlu Zırh Tema Seçici (Ay 🌙 & Güneş ☀️) -->
+        <button type="button" class="hud-compact-toggle" id="themeToggleBtn" aria-label="Zırh Temasını Değiştir" title="Ay (Cyan Gece) / Güneş (Crimson & Gold)">
+          <span class="toggle-icon icon-moon" data-theme-target="default">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </span>
+          <span class="toggle-icon icon-sun" data-theme-target="crimson-gold">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4.5" fill="currentColor"/>
+              <line x1="12" y1="1.5" x2="12" y2="3.5"/>
+              <line x1="12" y1="20.5" x2="12" y2="22.5"/>
+              <line x1="4.5" y1="4.5" x2="6" y2="6"/>
+              <line x1="18" y1="18" x2="19.5" y2="19.5"/>
+              <line x1="1.5" y1="12" x2="3.5" y2="12"/>
+              <line x1="20.5" y1="12" x2="22.5" y2="12"/>
+              <line x1="4.5" y1="19.5" x2="6" y2="18"/>
+              <line x1="18" y1="6" x2="19.5" y2="4.5"/>
+            </svg>
+          </span>
+          <span class="toggle-slider"></span>
+        </button>
+
+        <a href="#specs" class="cta-stark btn-laser-glow magnetic-btn">
+          <span data-i18n="nav.cta">Telemetriyi İncele</span>
+          <span class="btn-arrow">→</span>
+        </a>
+
+        <!-- Mobil HUD Hamburger Butonu (< 992px) -->
+        <button type="button" class="hud-menu-btn" id="mobileMenuBtn" aria-label="Menüyü Aç / Open Menu" aria-expanded="false">
+          <span class="hud-menu-bar"></span>
+          <span class="hud-menu-bar"></span>
+          <span class="hud-menu-bar"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobil HUD Navigasyon Çekmecesi -->
+  <div class="hud-mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer-panel">
+      <div class="drawer-hud-corner tl"></div>
+      <div class="drawer-hud-corner tr"></div>
+      <div class="drawer-hud-corner bl"></div>
+      <div class="drawer-hud-corner br"></div>
+
+      <div class="drawer-header">
+        <div class="drawer-brand">
+          <span class="stark-arc-icon" aria-hidden="true">
+            <svg class="stark-arc-svg" viewBox="0 0 28 28" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="14" cy="14" r="12" class="arc-svg-outer" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="14" cy="14" r="8.8" class="arc-svg-coils" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2"/>
+              <polygon points="14,6.8 20.2,17.6 7.8,17.6" class="arc-svg-tri" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <circle cx="14" cy="14" r="2.8" class="arc-svg-core" fill="currentColor"/>
+            </svg>
+          </span>
+          <span>MARK LXXXV // HUD</span>
+        </div>
+        <button type="button" class="drawer-close-btn" id="drawerCloseBtn" aria-label="Menüyü Kapat / Close Menu">✕</button>
+      </div>
+
+      <!-- Çekmece İçi Tema Değiştirici -->
+      <div class="drawer-controls-box">
+        <div class="drawer-ctrl-item">
+          <span class="drawer-ctrl-label" data-i18n="drawer.theme_label">ZIRH TEMASI</span>
+          <!-- Kompakt Animasyonlu Zırh Tema Seçici (Ay 🌙 & Güneş ☀️) -->
+          <button type="button" class="hud-compact-toggle drawer-theme-toggle" aria-label="Zırh Temasını Değiştir" title="Ay (Cyan Gece) / Güneş (Crimson & Gold)">
+            <span class="toggle-icon icon-moon" data-theme-target="default">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </span>
+            <span class="toggle-icon icon-sun" data-theme-target="crimson-gold">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4.5" fill="currentColor"/>
+                <line x1="12" y1="1.5" x2="12" y2="3.5"/>
+                <line x1="12" y1="20.5" x2="12" y2="22.5"/>
+                <line x1="4.5" y1="4.5" x2="6" y2="6"/>
+                <line x1="18" y1="18" x2="19.5" y2="19.5"/>
+                <line x1="1.5" y1="12" x2="3.5" y2="12"/>
+                <line x1="20.5" y1="12" x2="22.5" y2="12"/>
+                <line x1="4.5" y1="19.5" x2="6" y2="18"/>
+                <line x1="18" y1="6" x2="19.5" y2="4.5"/>
+              </svg>
+            </span>
+            <span class="toggle-slider"></span>
+          </button>
+        </div>
+      </div>
+
+      <nav class="drawer-nav-links">
+        <a href="#hero" class="drawer-link" data-i18n="nav.armor">Zırh</a>
+        <a href="#helmet" class="drawer-link" data-i18n="nav.helmet">Kask & HUD</a>
+        <a href="#reactor" class="drawer-link" data-i18n="nav.reactor">Ark Reaktörü</a>
+        <a href="#reactor-dive" class="drawer-link nav-link-dive" data-i18n="nav.dive">Çekirdek İçi</a>
+        <a href="#repulsor" class="drawer-link" data-i18n="nav.repulsor">İticiler</a>
+        <a href="#specs" class="drawer-link" data-i18n="nav.telemetry">Telemetri</a>
+      </nav>
+
+      <div class="drawer-footer">
+        <a href="#specs" class="cta-stark drawer-cta" id="drawerCta">
+          <span data-i18n="nav.cta">Telemetriyi İncele</span>
+          <span class="btn-arrow">→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arka Planda Sabit 3D Three.js Sahnesi -->
+  <div class="webgl-canvas-container" id="canvasContainer">
+    <canvas id="webglCanvas"></canvas>
+
+    <!-- HUD Holografik Katmanlar -->
+    <div class="hud-corner top-left"></div>
+    <div class="hud-corner top-right"></div>
+    <div class="hud-corner bottom-left"></div>
+    <div class="hud-corner bottom-right"></div>
+
+    <div class="hud-compass-ring"></div>
+
+    <!-- Canlı Telemetri HUD Rozetleri -->
+    <div class="hud-live-tag tag-left">
+      <span class="live-dot"></span>
+      <span class="scramble-hover" data-original="CORE FREQ: 4.88 GHz">CORE FREQ: 4.88 GHz</span>
+    </div>
+    <div class="hud-live-tag tag-right">
+      <span class="live-dot pulse"></span>
+      <span class="scramble-hover" data-original="NEURAL LINK: 99.98%">NEURAL LINK: 99.98%</span>
+    </div>
+  </div>
+
+
+  <!-- İlerleme Çubuğu -->
+  <div class="scroll-tracker-bar" id="scrollTracker"></div>
+
+  <!-- SCROLLYTELLING İÇERİK KATMANLARI -->
+  <main class="scrolly-flow">
+
+    <!-- 1. BÖLÜM: HERO / ZIRH UYANIŞI -->
+    <section class="story-section hero-section" id="hero">
+      <div class="container">
+        <div class="hero-card">
+          <div class="stark-tag">
+            <span class="pulse-led"></span>
+            <span class="scramble-text" data-i18n="hero.tag" data-original="NANOTEKNOLOJİ PROTOKOLÜ // AKTİF">NANOTEKNOLOJİ PROTOKOLÜ //
+              AKTİF</span>
+          </div>
+
+          <h1 class="main-heading">
+            <span class="scramble-text" data-original="MARK LXXXV">MARK LXXXV</span><br>
+            <span class="gold-crimson-gradient shimmer-text" data-i18n="hero.sub">SAF NANO-GÜÇ.</span>
+          </h1>
+
+          <p class="hero-desc" data-i18n="hero.desc">
+            Vibranyum ve titanyum nano-parçacık matrisinden örülen Mark 85;
+            Tony Stark'ın son ve en kusursuz zırhıdır. Saniyeler içinde form değiştirir,
+            enerjiyi emer ve saf plazmaya dönüştürür.
+          </p>
+
+          <div class="hero-quick-specs">
+            <div class="spec-cell">
+              <span class="spec-v count-up" data-target="3.2" data-suffix=" GJ/s" data-decimals="1">0.0 GJ/s</span>
+              <span class="spec-k" data-i18n="hero.output">REAKTÖR ÇIKIŞI</span>
+            </div>
+            <div class="spec-sep"></div>
+            <div class="spec-cell">
+              <span class="spec-v count-up" data-target="12" data-prefix="Mach ">Mach 0</span>
+              <span class="spec-k" data-i18n="hero.speed">AZAMİ HIZ</span>
+            </div>
+            <div class="spec-sep"></div>
+            <div class="spec-cell">
+              <span class="spec-v count-up" data-target="100" data-prefix="%">%0</span>
+              <span class="spec-k" data-i18n="hero.integrity">ZIRH BÜTÜNLÜĞÜ</span>
+            </div>
+          </div>
+
+          <div class="scroll-cue">
+            <span data-i18n="hero.scroll">Kaskı İncelemek İçin Kaydırın</span>
+            <div class="cue-mouse">
+              <div class="cue-wheel"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. BÖLÜM: KASK & HUD NÖRAL ARAYÜZÜ (Kamera Kaska Yakınlaşır) -->
+    <section class="story-section helmet-section" id="helmet">
+      <div class="container">
+        <div class="story-card right interactive-card">
+          <div class="card-scanline"></div>
+          <span class="section-counter scramble-text" data-i18n="helmet.stage" data-original="AŞAMA 01 // NÖRAL KASK">AŞAMA 01 // NÖRAL
+            KASK</span>
+          <h2 class="card-heading">
+            <span class="scramble-text" data-i18n="helmet.h2_1" data-original="Biyonik Görüş &">Biyonik Görüş &</span><br>
+            <span class="cyan-text shimmer-text" data-i18n="helmet.h2_2">Jarvis HUD Kilitlenmesi</span>
+          </h2>
+          <p class="card-p" data-i18n="helmet.desc">
+            Zırhın kaskı, doğrudan beyin dalgalarını okuyan nöral elektrotlar ve
+            360 derece fotonik sensör dizilimi ile donatılmıştır. Saniyede 12 trilyon
+            taktiksel simülasyon hesaplayarak hedefleri anında kilitler.
+          </p>
+
+          <div class="hud-telemetry-box">
+            <div class="telemetry-row">
+              <span class="t-label" data-i18n="helmet.t_label1">HEDEF TAKİBİ:</span>
+              <span class="t-val cyan glow-pulse" data-i18n="helmet.t_val1">KİLİTLENDİ (TRACKING)</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="t-label" data-i18n="helmet.t_label2">BİYOMETRİK SENKRON:</span>
+              <span class="t-val highlight count-up" data-target="99.98" data-suffix="%" data-decimals="2">0.00%</span>
+            </div>
+            <div class="telemetry-row">
+              <span class="t-label" data-i18n="helmet.t_label3">OPTİK PARLAKLIK:</span>
+              <span class="t-val count-up" data-target="8500" data-format="comma" data-suffix=" Nits Emissive">0 Nits
+                Emissive</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BÖLÜM: ARK REAKTÖRÜ & ENERJİ KALBİ (Kamera Göğse Dalar) -->
+    <section class="story-section reactor-section" id="reactor">
+      <div class="container">
+        <div class="story-card left interactive-card">
+          <div class="card-scanline"></div>
+          <span class="section-counter scramble-text" data-i18n="reactor.stage" data-original="AŞAMA 02 // GÖĞÜS ARK REAKTÖRÜ">AŞAMA 02 // GÖĞÜS
+            ARK REAKTÖRÜ</span>
+          <h2 class="card-heading">
+            <span class="scramble-text" data-i18n="reactor.h2_1" data-original="Sonsuz Güç Kaynağı:">Sonsuz Güç Kaynağı:</span><br>
+            <span class="cyan-text shimmer-text" data-i18n="reactor.h2_2">Yeni Element Çekirdeği</span>
+          </h2>
+          <p class="card-p" data-i18n="reactor.desc">
+            Geliştirilmiş minyatür ark reaktörü, sentetik Badassium izotopu kullanarak
+            temiz ve tükenmez termonükleer plazma üretir. Zırhın tüm nano-yapısını ve
+            kalkanlarını besleyen canlı bir yıldızdır.
+          </p>
+
+          <div class="reactor-power-meter">
+            <div class="meter-header">
+              <span data-i18n="reactor.meter">ARK REAKTÖRÜ ENERJİ VERİMLİLİĞİ</span>
+              <span class="meter-num count-up" data-target="3240000" data-format="comma" data-suffix=" KW">0 KW</span>
+            </div>
+            <div class="meter-bar">
+              <div class="meter-fill" id="reactorMeterFill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3.5 BÖLÜM: ARK REAKTÖRÜ İÇİNE DALIŞ (Kamera Göğüsteki Beyaz Işığın İÇİNE Girer) -->
+    <section class="story-section reactor-dive-section" id="reactor-dive">
+      <!-- Çekirdek İçi Parıltı & Warp Göstergesi -->
+      <div class="core-dive-vignette"></div>
+
+      <div class="container">
+        <div class="story-card right interactive-card core-dive-card">
+          <div class="card-scanline"></div>
+          <div class="dive-status-badge">
+            <span class="dive-pulse-dot"></span>
+            <span data-i18n="dive.badge">ÇEKİRDEK İÇİ KİLİTLENDİ // 10,000,000°K PLAZMA</span>
+          </div>
+          <span class="section-counter scramble-text" data-i18n="dive.stage" data-original="AŞAMA 03 // ÇEKİRDEĞİN İÇİNE DALIŞ">AŞAMA 03 //
+            ÇEKİRDEĞİN İÇİNE DALIŞ</span>
+          <h2 class="card-heading">
+            <span class="scramble-text" data-i18n="dive.h2_1" data-original="Beyaz Işığın İçi:">Beyaz Işığın İçi:</span><br>
+            <span class="cyan-text shimmer-text" data-i18n="dive.h2_2">Kuantum Plazma Odası</span>
+          </h2>
+          <p class="card-p" data-i18n="dive.desc">
+            Kamera zırhın göğüs plakasından içeri süzülerek yeni elementin mikroskobik
+            termonükleer plazma merkezine dalıyor. Zırh nano-şeffaflığa bürünürken
+            10 adet toroidal manyetik sargı, karşıt dönen türbin çarkları ve parlayan
+            kuantum iyonları sınırsız gücü açığa çıkarır.
+          </p>
+
+          <div class="core-dive-specs">
+            <div class="dive-spec-row">
+              <span class="spec-label" data-i18n="dive.spec_label1">MANYETİK ALAN:</span>
+              <span class="spec-value highlight glow-pulse" data-i18n="dive.spec_val1">4.85 TESLA (KORUMALI)</span>
+            </div>
+            <div class="dive-spec-row">
+              <span class="spec-label" data-i18n="dive.spec_label2">İYON REZONANSI:</span>
+              <span class="spec-value cyan count-up" data-target="99.99" data-suffix="%" data-decimals="2">0.00%</span>
+            </div>
+            <div class="dive-spec-row">
+              <span class="spec-label" data-i18n="dive.spec_label3">ÇEKİRDEK PLAZMA AKIŞI:</span>
+              <span class="spec-value count-up" data-target="1250000" data-format="comma" data-suffix=" MeV/sn">0
+                MeV/sn</span>
+            </div>
+          </div>
+
+          <div class="core-actions">
+            <button class="btn-dive-pulse btn-laser-glow magnetic-btn" id="btnCoreOverdrive">
+              <span class="btn-core-glow"></span>
+              <svg class="btn-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+              <span data-i18n="dive.btn">Plazma Aşırı Yükünü Ateşle (Pulse)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. BÖLÜM: REPULSOR İTİCİLERİ (Kamera Kollara & İticilere Döner) -->
+    <section class="story-section repulsor-section" id="repulsor">
+      <div class="container">
+        <div class="story-card right interactive-card">
+          <div class="card-scanline"></div>
+          <span class="section-counter scramble-text" data-i18n="repulsor.stage" data-original="AŞAMA 04 // İTİCİ VE SİLAH SİSTEMLERİ">AŞAMA 04 //
+            İTİCİ VE SİLAH SİSTEMLERİ</span>
+          <h2 class="card-heading">
+            <span class="scramble-text" data-i18n="repulsor.h2_1" data-original="Süpersonik İtki &">Süpersonik İtki &</span><br>
+            <span class="gold-text shimmer-text" data-i18n="repulsor.h2_2">Plazma Repulsorları</span>
+          </h2>
+          <p class="card-p" data-i18n="repulsor.desc">
+            Avuç içlerindeki yüksek yoğunluklu partikül hızlandırıcılar,
+            yerçekimi karşıtı kaldırma kuvveti üreterek saniyeler içinde atmosfer dışına
+            çıkmayı sağlar ve gerektiğinde odaklanmış plazma ışınları fırlatır.
+          </p>
+
+          <div class="telemetry-grid">
+            <div class="grid-item">
+              <span class="g-num count-up" data-target="12" data-prefix="Mach ">Mach 0</span>
+              <span class="g-txt" data-i18n="repulsor.speed">Uçuş Hızı</span>
+            </div>
+            <div class="grid-item">
+              <span class="g-num count-up" data-target="4500" data-format="comma" data-suffix=" °C">0 °C</span>
+              <span class="g-txt" data-i18n="repulsor.temp">Işın Isısı</span>
+            </div>
+          </div>
+
+          <button class="btn-repulsor-test btn-laser-glow magnetic-btn" id="btnRepulsorTest">
+            <span class="btn-charge-ring"></span>
+            <svg class="btn-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            <span data-i18n="repulsor.btn">Repulsor Şarjını Test Et</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. BÖLÜM: BENTO GRID TEKNİK MİMARİ -->
+    <section class="story-section specs-section" id="specs">
+      <div class="container">
+        <div class="specs-wrapper">
+          <div class="section-tag-center">
+            <span class="pulse-led"></span>
+            <span class="scramble-text" data-i18n="specs.tag" data-original="STARK LABS // NANO-MİMARİ">STARK LABS // NANO-MİMARİ</span>
+          </div>
+          <h2 class="specs-title scramble-text" data-i18n="specs.title" data-original="Efsanenin Bilişsel ve Fiziksel Sınırları">Efsanenin
+            Bilişsel ve Fiziksel Sınırları</h2>
+
+          <div class="bento-grid">
+            <div class="bento-card bento-2col interactive-card">
+              <div class="card-scanline"></div>
+              <div class="bento-icon-svg">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                  <rect x="9" y="9" width="6" height="6" />
+                  <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" />
+                </svg>
+              </div>
+              <h3 class="bento-name" data-i18n="bento.friday_title">85. Nesil F.R.I.D.A.Y. Yapay Zeka Çekirdeği</h3>
+              <p class="bento-desc" data-i18n="bento.friday_desc">Göz açıp kapayıncaya kadar düşman mühimmatını analiz eder, nano-kalkanları tehdidin
+                açısına göre milisaniyede şekillendirir.</p>
+              <div class="bento-big-stat count-up" data-target="12000" data-format="comma" data-suffix=" TFLOPS">0
+                TFLOPS</div>
+            </div>
+
+            <div class="bento-card interactive-card">
+              <div class="card-scanline"></div>
+              <div class="bento-icon-svg">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+              </div>
+              <h3 class="bento-name" data-i18n="bento.regen_title">Nano-Kafes Rejenerasyonu</h3>
+              <p class="bento-desc" data-i18n="bento.regen_desc">Ağır hasar aldığında çevreleyen nano-parçacıklar hasarlı dokuyu saniyeler içinde
+                onarır.</p>
+              <div class="bento-big-stat count-up" data-target="99.4" data-prefix="%" data-decimals="1">%0.0</div>
+            </div>
+
+            <div class="bento-card interactive-card">
+              <div class="card-scanline"></div>
+              <div class="bento-icon-svg">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M3.6 9h16.8M3.6 15h16.8" />
+                  <path d="M11.5 3a17 17 0 0 0 0 18M12.5 3a17 17 0 0 1 0 18" />
+                </svg>
+              </div>
+              <h3 class="bento-name" data-i18n="bento.space_title">Derin Uzay Desteği</h3>
+              <p class="bento-desc" data-i18n="bento.space_desc">Mutlak sıfır (-273°C) soğuklukta ve kozmik radyasyon altında bağımsız yaşam kabini.
+              </p>
+              <div class="bento-big-stat count-up" data-target="48" data-suffix=" Saat" data-suffix-tr=" Saat" data-suffix-en=" Hours">0 Saat</div>
+            </div>
+
+            <div class="bento-card bento-2col interactive-card">
+              <div class="card-scanline"></div>
+              <div class="bento-icon-svg">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+              </div>
+              <h3 class="bento-name" data-i18n="bento.thor_title">Yıldırım & Enerji Emici Matris</h3>
+              <p class="bento-desc" data-i18n="bento.thor_desc">Thor'un yıldırımlarından elektrik enerjisine kadar dış saldırıları reaktör şarjına
+                dönüştüren ters akım kapasitörleri.</p>
+              <div class="bento-big-stat count-up" data-target="300" data-prefix="%" data-suffix=" Aşırı Güç" data-suffix-tr=" Aşırı Güç" data-suffix-en=" Overpower">%0 Aşırı
+                Güç</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Alt Bilgi / Jenerik -->
+  <footer class="stark-footer">
+    <div class="container">
+      <div class="footer-row">
+      </div>
+      <div class="footer-bottom">
+        <span class="footer-copy" data-i18n="footer.copy">© 2026 Stark Industries Global. Tüm Hakları Saklıdır.</span>
+        <a href="#hero" class="footer-back-top">
+          <span data-i18n="footer.back">Başa Dön</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19V5"/>
+            <path d="m5 12 7-7 7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
