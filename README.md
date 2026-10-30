@@ -2,6 +2,7 @@
 ### 🚀 3D WebGL & Three.js Cinematic Scrollytelling Experience
 
 [![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-00f0ff?style=for-the-badge&logo=github)](https://tekneenes.github.io/ironman-3d-animation-website/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Three.js](https://img.shields.io/badge/Three.js-r128-black?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![WebGL2](https://img.shields.io/badge/WebGL2-3D%20PBR-red?style=for-the-badge&logo=webgl)](https://www.khronos.org/webgl/)
 [![JavaScript](https://img.shields.io/badge/Vanilla%20JS-ES6+-yellow?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
@@ -95,3 +96,10 @@ Ardından tarayıcınızdan **`http://localhost:8000`** adresine gidin.
 **Muhammed Enes Tekne**  
 - **GitHub:** [@tekneenes](https://github.com/tekneenes)
 - **Web Sitesi:** [tekneenes.github.io](https://tekneenes.github.io)
+
+---
+
+## 📄 Lisans
+Bu proje [MIT Lisansı](LICENSE) altında lisanslanmıştır.  
+*Not: Zırh 3D modeli Grant Riley tarafından üretilmiş olup CC-BY-NC-4.0 lisansı kapsamındadır.*
+
